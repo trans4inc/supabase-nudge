@@ -15,6 +15,8 @@ Cost: $0/month. Maintenance: edit one JSON file + add two GitHub Secrets to add 
 - [`scripts/nudge.py`](./scripts/nudge.py) — Python stdlib only; loops over projects, hits `/rest/v1/<table>?select=*&limit=1` with the anon key, and verifies the response is a non-empty JSON array.
 - [`setup.sql`](./setup.sql) — the per-project SQL snippet you run once in each Supabase project's SQL editor.
 
+> **Note:** the `keep_alive` table is anon-readable by design (the pinger uses the public anon key). Don't add sensitive data to it — anything in that table can be read by anyone holding the project's anon key.
+
 ## Secret naming convention
 
 For each project there are two GitHub Secrets, derived from the project's `id`:
