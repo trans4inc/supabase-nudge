@@ -73,5 +73,6 @@ ALL_SECRETS='{"SUPABASE_MYAPP_URL":"https://...supabase.co","SUPABASE_MYAPP_ANON
 - **Wrong table name** — HTTP 404 / 400.
 - **Network error** — DNS failure, timeout, etc.
 - **Project paused** — Supabase returns an error response; surfaces as HTTP error.
+- **Unexpected redirect** — any 3xx response is treated as a failure rather than followed, so the anon key is never replayed to a different host (defense against `Authorization`-header leak via cross-origin redirect; see [`SECURITY-REVIEW.md`](./SECURITY-REVIEW.md) §2).
 
 The script pings every project before exiting, so one bad project doesn't hide failures in others. Failures are summarised at the end.

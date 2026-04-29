@@ -23,8 +23,15 @@ This repo is `supabase-nudge` — a scheduled GitHub Actions workflow that pings
 
 - Anon keys only — never service role keys (`docs/decisions.md`, 2026-04-29 entry).
 - Python stdlib only — no `pip install` step (keeps the workflow fast and dependency-free).
-- The repo can be public; secrets stay in GitHub Secrets either way.
+- The repo is **private**. This matters: `permissions: {}` would strip the `contents:read` scope `actions/checkout` needs to clone, so the workflow uses `permissions: contents: read` (the strictest setting that still works) and intentionally drops every write scope.
 - Out of scope for v1: Slack/Discord notifications, auto-unpause, custom dashboard, per-project frequencies. The Actions tab is the dashboard.
+
+## Security-related decisions (see SECURITY-REVIEW.md for full rationale)
+
+- The `_NoRedirect` handler in `nudge.py` is **deliberate**: it raises on any 3xx so the `Authorization` header is never replayed to a different host (urllib follows redirects with auth attached by default, unlike `requests`). Don't simplify back to plain `urlopen` — local tests prove it blocks cross-origin redirects.
+- `actions/checkout@v4` is **intentionally not SHA-pinned**. It's a first-party action and the maintenance cost of pinning + scheduled bumps was judged not worth it for this hobby tool. Don't proactively SHA-pin without re-evaluating the threat model.
+- The `keep_alive` table is anon-readable by design. Don't add sensitive data to it; the README warns about this.
+- `repr(e)` in the unexpected-error branch was reviewed and deliberately left as-is — GitHub log masking already provides a backstop, and a more verbose message is more useful for real debugging.
 
 ## Testing
 
