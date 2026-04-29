@@ -10,10 +10,12 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
-    # The script only makes outbound HTTP to Supabase — it never needs the
-    # GITHUB_TOKEN. Drop all default token scopes as defense-in-depth in case
-    # the script is ever compromised.
-    permissions: {}
+    # The script only makes outbound HTTP to Supabase — it never needs to
+    # write anything via GITHUB_TOKEN. Restrict the token to read-only on
+    # contents (just enough for actions/checkout to clone) and drop every
+    # other default scope as defense-in-depth.
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
