@@ -1,0 +1,22 @@
+name: supabase-nudge
+
+on:
+  schedule:
+    # Sun, Mon, Wed, Fri at 09:17 UTC — max gap between runs is 2 days,
+    # well inside Supabase's 7-day inactivity window.
+    - cron: '17 9 * * 0,1,3,5'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ping each Supabase project
+        env:
+          # Pass every secret through as one JSON blob so adding a new project
+          # only requires editing projects.json + adding the new secrets — never
+          # this workflow file.
+          ALL_SECRETS: ${{ toJSON(secrets) }}
+        run: python3 scripts/nudge.py
