@@ -2,6 +2,8 @@
 
 This repo is `supabase-nudge` — a scheduled GitHub Actions workflow that pings Supabase free-tier projects to prevent the 7-day inactivity auto-pause. The original spec and design rationale live in `docs/spec.md` and `docs/decisions.md` — read those before proposing changes.
 
+**Status:** live since 2026-04-29. Manual runs are green, the failure-email path has been verified end-to-end (deliberately bad secret produced a red run + an email to the repo owner). Active projects in `projects.json`: DiamondBook, InfoPen, Synthesis. If you're touching this repo, assume real users (those three apps) depend on it staying green — don't break the cron schedule or the success criteria.
+
 ## Mental model in 30 seconds
 
 - One workflow (`.github/workflows/nudge.yml`) runs Sun/Mon/Wed/Fri at 09:17 UTC and on manual trigger.
@@ -26,7 +28,7 @@ This repo is `supabase-nudge` — a scheduled GitHub Actions workflow that pings
 
 ## Testing
 
-The cron trigger and GitHub's failure-email behavior can only be verified on GitHub. Locally you can run:
+Locally you can run:
 
 ```sh
 ALL_SECRETS='{"SUPABASE_FOO_URL":"...","SUPABASE_FOO_ANON_KEY":"..."}' python3 scripts/nudge.py
@@ -35,3 +37,5 @@ ALL_SECRETS='{"SUPABASE_FOO_URL":"...","SUPABASE_FOO_ANON_KEY":"..."}' python3 s
 with a matching entry in `projects.json`. To smoke-test failure paths, swap in a wrong anon key (auth failure) or point `table` at a nonexistent name (HTTP 4xx) or an empty table (empty-array failure).
 
 For the workflow YAML, run `actionlint .github/workflows/nudge.yml`.
+
+After any non-trivial change to `nudge.py` or the workflow, re-run the live failure smoke-test on GitHub (temporarily break one secret, run, confirm red + email, restore). The full run path is the only thing that catches issues like an auth response shape change from Supabase.

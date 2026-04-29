@@ -2,6 +2,8 @@
 
 A pause-prevention pinger for Supabase free-tier projects.
 
+**Status:** live since 2026-04-29 — workflow runs cleanly on manual trigger, the failure-email path has been smoke-tested end-to-end (deliberately bad secret → red run → email to repo owner → secret restored → green again).
+
 A scheduled GitHub Actions workflow runs four times per week (Sun/Mon/Wed/Fri at 09:17 UTC) and issues a real `SELECT` query against each Supabase project listed in [`projects.json`](./projects.json). If any project returns no data, an auth error, or a network error, the workflow fails and GitHub emails the repo owner. The maximum gap between runs is two days, well inside Supabase's 7-day inactivity window.
 
 Cost: $0/month. Maintenance: edit one JSON file + add two GitHub Secrets to add a project.
@@ -45,9 +47,9 @@ That's it. No workflow YAML changes, no Python changes.
 
 ## Verifying the workflow is working
 
-- **After first push:** Repo → Actions → `supabase-nudge` → Run workflow (manual trigger). Confirm every project line says `PASS:` and the job ends green.
-- **Ongoing:** the Actions tab is the dashboard. Failed runs show in red and trigger a failure email to the repo owner.
-- **Smoke-test a failure:** temporarily change one project's `SUPABASE_<ID>_ANON_KEY` secret to a wrong value, run the workflow manually, confirm it fails with a clear `FAIL:` line and you get an email. Restore the secret afterward.
+- **Day-to-day:** the Actions tab is the dashboard. Green runs are silent; red runs trigger a failure email to the repo owner.
+- **Manual run:** Repo → Actions → `supabase-nudge` → Run workflow. Useful after editing `projects.json` or any time you want immediate confirmation rather than waiting for the next cron tick.
+- **Re-smoke-test the failure path** (recommended after any non-trivial change to the script or workflow): temporarily change one project's `SUPABASE_<ID>_ANON_KEY` to a wrong value, run the workflow manually, confirm it fails with a clear `FAIL:` line and you get the email, then restore the secret.
 
 ## Running locally
 
