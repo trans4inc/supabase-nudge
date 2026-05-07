@@ -5,6 +5,12 @@ Reads project list from projects.json and per-project credentials from
 $ALL_SECRETS (a JSON blob populated by the GitHub Actions workflow from
 ${{ toJSON(secrets) }}). Pings every project, logs a line per result,
 and exits non-zero if any failed.
+
+A "ping" is a POST that INSERTs one row into the project's keep_alive
+table, using `Prefer: return=representation` so PostgREST echoes the
+inserted row back. SELECT-based pings were tried first and turned out
+to be insufficient for Supabase's free-tier activity tracker — see
+docs/decisions.md (2026-05-07 entry) before changing this back.
 """
 
 import json
@@ -52,13 +58,20 @@ def ping(project, secrets):
     if not anon_key:
         return False, f"missing secret {key_secret}"
 
-    request_url = f"{url.rstrip('/')}/rest/v1/{table}?select=*&limit=1"
+    request_url = f"{url.rstrip('/')}/rest/v1/{table}"
+    # Empty JSON body — the table's columns must all have defaults so the
+    # database fills every value. This keeps the script decoupled from the
+    # exact column list of keep_alive (see setup.sql).
     req = urllib.request.Request(
         request_url,
+        method="POST",
+        data=b"{}",
         headers={
             "apikey": anon_key,
             "Authorization": f"Bearer {anon_key}",
+            "Content-Type": "application/json",
             "Accept": "application/json",
+            "Prefer": "return=representation",
         },
     )
 
@@ -74,8 +87,8 @@ def ping(project, secrets):
     except Exception as e:
         return False, f"unexpected error: {e!r}"
 
-    if status != 200:
-        return False, f"unexpected status {status}"
+    if status != 201:
+        return False, f"unexpected status {status} (expected 201 Created)"
 
     try:
         data = json.loads(body)
@@ -86,11 +99,12 @@ def ping(project, secrets):
         return False, f"expected JSON array, got {type(data).__name__}"
     if len(data) == 0:
         return False, (
-            f"empty response from table {table!r} — "
-            "table has no rows, or RLS denied the SELECT"
+            f"empty response from INSERT into {table!r} — "
+            "PostgREST didn't echo the inserted row, "
+            "or RLS denied SELECT on the new row"
         )
 
-    return True, f"ok ({len(data)} row from {table!r})"
+    return True, f"ok ({len(data)} row inserted into {table!r})"
 
 
 def main():
