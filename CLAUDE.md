@@ -1,6 +1,6 @@
 # Orientation for Claude Code sessions
 
-This repo is `supabase-nudge` — a scheduled GitHub Actions workflow that pings Supabase free-tier projects to prevent the 7-day inactivity auto-pause. The original spec and design rationale live in `docs/spec.md` and `docs/decisions.md` — read those before proposing changes.
+This repo is `supabase-nudge` — a scheduled GitHub Actions workflow that pings Supabase free-tier projects to prevent the 7-day inactivity auto-pause. The original spec and design rationale live in `docs/spec.md` and `docs/decisions.md` — read those before proposing changes. `docs/handoff-switch-to-writes.md` captures the planning input for the 2026-05-07 SELECT→INSERT switch (problem evidence, schema/script change list, debugging note); read it if you're touching the ping mechanism or the keep_alive schema.
 
 **Status:** live since 2026-04-29. Switched from SELECT-based to INSERT-based pings on 2026-05-07 after two of three projects were flagged for inactivity pause despite green workflow runs (see `docs/decisions.md` 2026-05-07 entry). The failure-email path was verified end-to-end on 2026-04-29 (deliberately bad secret → red run → email); re-verify after the writes-based version has been live across the existing projects. Active projects in `projects.json`: DiamondBook, InfoPen, Synthesis. If you're touching this repo, assume real users (those three apps) depend on it staying green — don't break the cron schedule or the success criteria.
 
