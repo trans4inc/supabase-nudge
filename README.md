@@ -1,3 +1,5 @@
+** NOTE: update May 16, 2026. This keep-alive is failing to accomplish the goal of preventing Supabase projects from being paused. I am currently researching if Supabase has changed their definition of "activity". I will update once research is done.**
+
 # supabase-nudge
 
 A pause-prevention pinger for Supabase free-tier projects.
